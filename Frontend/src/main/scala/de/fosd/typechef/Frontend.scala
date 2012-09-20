@@ -131,7 +131,10 @@ object Frontend {
                     logMessage=("Time for lexing(ms): " + (t2-t1) + "\nTime for parsing(ms): " + (t3-t2) + "\n"))
                   t7 = System.currentTimeMillis()
                 }
-
+                if (opt.ifdsIDE) {
+                  println("running IDE framework.")
+                  cf.checkIde(opt.getFile)
+                }
             }
 
         }

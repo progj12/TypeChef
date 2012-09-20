@@ -50,6 +50,13 @@ class CAnalysisFrontend(tunit: AST, fm: FeatureModel = FeatureExprFactory.defaul
     fdefs.map(intraDataflowAnalysis(_))
   }
 
+  def checkIde(fileName: String) {
+
+    // family-based
+    println("IDE analysis")
+
+  }
+
   private def intraCfGFunctionDef(f: FunctionDef) = {
     val env = CASTEnv.createASTEnv(f)
     val s = getAllSucc(f, fm, env)
