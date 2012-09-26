@@ -1,5 +1,5 @@
-import collection.immutable.HashSet
 import de.fosd.typechef.crewrite.{ASTNavigation, ASTEnv, ConditionalControlFlow}
+import de.fosd.typechef.featureexpr.FeatureModel
 import de.fosd.typechef.parser.c._
 import de.fosd.typechef.parser.c.FunctionCall
 import de.fosd.typechef.parser.c.FunctionDef
@@ -7,10 +7,9 @@ import de.fosd.typechef.parser.c.PostfixExpr
 import soot.jimple.interproc.ifds.InterproceduralCFG
 import scala.collection.JavaConversions._
 
-class CICFG(env: ASTEnv) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
+class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
 
   def getMethodOf(p1: AST) = null
-
 
   def getCalleesOfCallAt(p1: AST) = null
 
@@ -22,9 +21,9 @@ class CICFG(env: ASTEnv) extends ConditionalControlFlow with InterproceduralCFG[
 
   def allNonCallStartNodes() = null
 
-  def getSuccsOf(stmt: AST) = seqAsJavaList(succ(stmt, env))
+  def getSuccsOf(stmt: AST) = seqAsJavaList(succ(stmt, fm, env))
 
-  def getStartPointsOf(func: FunctionDef) = setAsJavaSet(Set.empty[AST] ++ succ(func, env))
+  def getStartPointsOf(func: FunctionDef) = setAsJavaSet(Set.empty[AST] ++ succ(func, fm, env))
 
   def isCallStmt(stmt: AST) =
     stmt match {
@@ -48,7 +47,7 @@ class CICFG(env: ASTEnv) extends ConditionalControlFlow with InterproceduralCFG[
   ;
 
   def isFallThroughSuccessor(stmt: AST, suc: AST) =
-    succ(stmt,env).size() == 1 && succ(stmt,env).head == suc;
+    succ(stmt,env).size() == 1 && succ(stmt, fm, env).head == suc;
 
-  def isBranchTarget(stmt: AST, suc: AST) = succ(stmt,env).exists(x => x == suc)
+  def isBranchTarget(stmt: AST, suc: AST) = succ(stmt, fm, env).exists(x => x == suc)
 }
