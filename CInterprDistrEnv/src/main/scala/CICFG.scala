@@ -80,8 +80,32 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
    * @param p1 current method
    * @return   call sites within f1
    */
-  def getCallsFromWithin(p1: FunctionDef) = null
-  // idea "tree" build from p1 to next "returnExpr" build with breadthFirstSearch with succ(..)
+  def getCallsFromWithin(p1: FunctionDef) = {
+    var todo = succ(p1, fm, env)
+    var done = Set.empty[AST]
+    var calls = Set.empty[AST]
+
+    // BFS
+    for(current <- todo){
+      current match{
+          // Dont follow Returns
+        case Some(z: ReturnStatement) => done+(z)
+          // Dont follow Calls, but collect them
+        case Some(x: FunctionCall) => {
+          calls+(x)
+          done+(x)
+        }
+        // Follow Statements
+        case Some(y: AST) => {
+          todo.++(succ(y, fm, env))
+          done+(y)
+        }
+        case _ =>
+      }
+    }
+    setAsJavaSet(calls)
+  }
+
 
   /**
    *  Returns all statements to which a call could return.
