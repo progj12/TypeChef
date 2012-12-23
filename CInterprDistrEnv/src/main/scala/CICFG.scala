@@ -8,16 +8,16 @@ import soot.jimple.interproc.ifds.InterproceduralCFG
 import scala.collection.JavaConversions._
 import scala.collection.immutable.TreeSet
 
-class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
+class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
+
+
+
 
   /**
    * Method containing the a Node
    * @param p1  current Node
    * @return    FunctionDef of Method containing n1
    *
-   *            todo call-node is on caller site!
-   *
-   * idea: traverse pred(p1) to next FunctionDef
    * question: possible to have more than one pred?
    */
   def getMethodOf(p1: AST) : FunctionDef = {
@@ -87,21 +87,26 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
 
     // BFS
     for(current <- todo){
-      current match{
+      // process only if it's not done
+      if(!done.contains(Some(current))){
+        current match{
           // Dont follow Returns
-        case Some(z: ReturnStatement) => done+(z)
-          // Dont follow Calls, but collect them
-        case Some(x: FunctionCall) => {
-          calls+(x)
-          done+(x)
+          case Some(z: ReturnStatement) => done+(z)
+            // Dont follow Calls, but collect them
+          case Some(x: FunctionCall) => {
+            calls+(x)
+            done+(x)
+          }
+          // Follow Statements
+          case Some(y: AST) => {
+            todo.++(succ(y, fm, env))
+            done+(y)
+          }
+          case _ =>
         }
-        // Follow Statements
-        case Some(y: AST) => {
-          todo.++(succ(y, fm, env))
-          done+(y)
-        }
-        case _ =>
       }
+      // remove current node from workinglist (usage of --Operator is deprecated)
+      todo = todo.filterNot(_ == current);
     }
     setAsJavaSet(calls)
   }
@@ -133,7 +138,7 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
 
     }
     // remove all duplicates and return the list of returnsites
-    rsoc.distinct
+    seqAsJavaList(rsoc.distinct)
   }
 
   /**
@@ -143,9 +148,21 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
    * @return  Set of nodes
    */
   def allNonCallStartNodes() = {
-    // question how to get the "root" node?
+    var callStartNodes = Set.empty[AST]
+    var nonCallStartNodes = Set.empty[AST]
+    var todo = Set.apply(tUnit)
 
-    null // todo remove
+
+    // filter recursively for FunctionCalls and FunctionDefs
+    callStartNodes++ filterAllASTElems[FunctionCall] (tUnit)  // Call
+    callStartNodes++ filterAllASTElems[FunctionDef](tUnit)   // Start
+    nonCallStartNodes++ filterAllASTElems[AST](tUnit) // getAllNodes
+
+    // todo correct? efficient way?
+
+    nonCallStartNodes.--(callStartNodes) // remove CallStartNodes
+
+    setAsJavaSet(nonCallStartNodes)
   }
 
   def getSuccsOf(stmt: AST) = {
@@ -157,7 +174,7 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
           case _ =>
         }
     }
-    results
+    seqAsJavaList(results)
   }
 
 
@@ -200,4 +217,11 @@ class CICFG(env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with I
 
   def isBranchTarget(stmt: AST, suc: AST) = succ(stmt, fm, env).exists(x => x == suc)
 
+  def getCallTarget(stmt: AST): FunctionDef = {
+    if(stmt.isInstanceOf[FunctionCall]) return null
+
+    // get called Function
+
+
+  }
 }
