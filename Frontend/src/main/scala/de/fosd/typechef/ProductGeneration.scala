@@ -5,7 +5,7 @@ import crewrite.{CAnalysisFrontend, EnforceTreeHelper, ProductDerivation}
 import featureexpr._
 
 import bdd.{BDDFeatureExpr, BDDFeatureModel, SatSolver}
-import parser.c.{AST, PrettyPrinter, TranslationUnit}
+import parser.c.{AST, TranslationUnit}
 import typesystem.CTypeSystemFrontend
 import scala.collection.immutable.HashMap
 import scala.Predef._
@@ -236,8 +236,10 @@ object ProductGeneration extends EnforceTreeHelper {
                             "../Linux_allyes_modified.config"
                         else if (caseStudy.equals("busybox"))
                             "../BusyboxBigConfig.config"
+                        else if (caseStudy.equals("openssl"))
+                            "/local/joliebig/OpenSSL.config"
                         else
-                            throw new Exception("unknown case Study, give linux or busybox")
+                            throw new Exception("unknown case Study, give linux, busybox, or openssl")
                         startTime = System.currentTimeMillis()
                         val (configs, logmsg) = getConfigsFromFiles(features, fm, new File(configFile))
                         tasks :+= Pair("FileConfig", configs)
@@ -262,18 +264,22 @@ object ProductGeneration extends EnforceTreeHelper {
                 } else if (caseStudy == "busybox") {
                     productsDir = new File("../TypeChef-BusyboxAnalysis/generatedConfigs_Henard/")
                     dimacsFM = new File("../TypeChef-BusyboxAnalysis/generatedConfigs_Henard/BB_fm.dimacs")
+                } else if (caseStudy == "openssl") {
+                  productsDir = new File("/local/joliebig/TypeChef-OpenSSLAnalysis/openssl-1.0.1c/generatedConfigs_Henard/")
+                  dimacsFM = new File ("/local/joliebig/TypeChef-OpenSSLAnalysis/openssl-1.0.1c/generatedConfigs_Henard/Openssl.dimacs")
                 } else {
-                    throw new Exception("unknown case Study, give linux or busybox")
+                    throw new Exception("unknown case Study, give linux, busybox, or openssl")
                 }
                 startTime = System.currentTimeMillis()
-                val (configs, logmsg) = loadConfigurationsFromHenardFiles(
-                    productsDir.list().map(new File(productsDir, _)).toList.
-                        filter(!_.getName.endsWith(".dat")).filter(!_.getName.endsWith(".dimacs")).
-                        sortBy({
-                        f: File => (f.getName.substring(f.getName.lastIndexOf("product") + "product".length)).toInt
-                    }),
-                    dimacsFM,
-                    features, fm)
+                val (configs, logmsg) = loadConfigurationsFromCSVFile(new File("/local/joliebig/TypeChef-OpenSSLAnalysis/openssl-1.0.1c/generatedConfigs_Henard/henard.csv"), features, fm)
+//                val (configs, logmsg) = loadConfigurationsFromHenardFiles(
+//                    productsDir.list().map(new File(productsDir, _)).toList.
+//                        filter(!_.getName.endsWith(".dat")).filter(!_.getName.endsWith(".dimacs")).
+//                        sortBy({
+//                        f: File => (f.getName.substring(f.getName.lastIndexOf("product") + "product".length)).toInt
+//                    }),
+//                    dimacsFM,
+//                    features, fm)
                 tasks :+= Pair("henard", configs)
 
                 configurations ++= configs
@@ -284,6 +290,7 @@ object ProductGeneration extends EnforceTreeHelper {
         }
 
         /**Single-wise */
+
         /*
                 {
                     if (typecheckingTasks.find(_._1.equals("singleWise")).isDefined) {
@@ -391,12 +398,16 @@ object ProductGeneration extends EnforceTreeHelper {
     private def varAwareAnalysisSetup(fm_ts: FeatureModel, ast: AST, opt: FrontendOptions): (TranslationUnit, List[Task], String, String) = {
       var caseStudy = ""
       var thisFilePath = ""
-      if (opt.getFile.contains("linux-2.6.33.3")) {
-        thisFilePath = opt.getFile.substring(opt.getFile.lastIndexOf("linux-2.6.33.3"))
+      val fileAbsPath = new File(".").getAbsolutePath + opt.getFile
+      if (fileAbsPath.contains("linux-2.6.33.3")) {
+        thisFilePath = fileAbsPath.substring(opt.getFile.lastIndexOf("linux-2.6.33.3"))
         caseStudy = "linux"
-      } else if (opt.getFile.contains("busybox-1.18.5")) {
-        thisFilePath = opt.getFile.substring(opt.getFile.lastIndexOf("busybox-1.18.5"))
+      } else if (fileAbsPath.contains("busybox-1.18.5")) {
+        thisFilePath = fileAbsPath.substring(opt.getFile.lastIndexOf("busybox-1.18.5"))
         caseStudy = "busybox"
+      } else if (fileAbsPath.contains("openssl-1.0.1c")) {
+        thisFilePath = fileAbsPath.substring(opt.getFile.lastIndexOf("openssl-1.0.1c"))
+        caseStudy = "openssl"
       } else {
         thisFilePath=opt.getFile
       }
@@ -439,7 +450,7 @@ object ProductGeneration extends EnforceTreeHelper {
       if (tasks.size > 0) println("start task - dataflow (" + (tasks.size) + " tasks)")
       // results (taskName, (NumConfigs, errors, timeSum))
       var configCheckingResults: List[(String, (Int, Int, Long, List[Long]))] = List()
-      val outFilePrefix: String = "../reports/" + fileName.substring(0, fileName.length - 2)
+      val outFilePrefix: String = "/local/joliebig/output/reports/" + fileName.substring(0, fileName.length - 2)
       for ((taskDesc: String, configs : List[SimpleConfiguration]) <- tasks) {
         val configurationsWithErrors = 0
         var current_config = 0
@@ -490,12 +501,16 @@ object ProductGeneration extends EnforceTreeHelper {
     def typecheckProducts(fm_scanner: FeatureModel, fm_ts: FeatureModel, ast: AST, opt: FrontendOptions, logMessage: String) {
         var caseStudy = ""
         var thisFilePath: String = ""
-        if (opt.getFile.contains("linux-2.6.33.3")) {
-            thisFilePath = opt.getFile.substring(opt.getFile.lastIndexOf("linux-2.6.33.3"))
+        val fileAbsPath = new File(".").getAbsolutePath + opt.getFile
+        if (fileAbsPath.contains("linux-2.6.33.3")) {
+            thisFilePath = fileAbsPath.substring(fileAbsPath.lastIndexOf("linux-2.6.33.3"))
             caseStudy = "linux"
-        } else if (opt.getFile.contains("busybox-1.18.5")) {
-            thisFilePath = opt.getFile.substring(opt.getFile.lastIndexOf("busybox-1.18.5"))
+        } else if (fileAbsPath.contains("busybox-1.18.5")) {
+            thisFilePath = fileAbsPath.substring(fileAbsPath.lastIndexOf("busybox-1.18.5"))
             caseStudy = "busybox"
+        } else if (fileAbsPath.contains("openssl-1.0.1c")) {
+          thisFilePath = fileAbsPath.substring(fileAbsPath.lastIndexOf("openssl-1.0.1c"))
+          caseStudy = "openssl"
         } else {
             thisFilePath = opt.getFile
         }
@@ -505,7 +520,7 @@ object ProductGeneration extends EnforceTreeHelper {
 
         println("starting product checking.")
 
-        val configSerializationDir = new File("../savedConfigs/" + thisFilePath.substring(0, thisFilePath.length - 2))
+        val configSerializationDir = new File("/local/joliebig/output/savedConfigs/" + thisFilePath.substring(0, thisFilePath.length - 2))
 
         val (configGenLog: String, typecheckingTasks: List[Task]) =
             buildConfigurations(family_ast, fm_ts, configSerializationDir, caseStudy)
@@ -1111,13 +1126,13 @@ object ProductGeneration extends EnforceTreeHelper {
         var trueFeatures: Set[SingleFeatureExpr] = Set()
         var falseFeatures: Set[SingleFeatureExpr] = Set()
 
-        val enabledPattern: Pattern = java.util.regex.Pattern.compile("CONFIG_([^=]*)=y")
-        val disabledPattern: Pattern = java.util.regex.Pattern.compile("CONFIG_([^=]*)=n")
+        val enabledPattern: Pattern = java.util.regex.Pattern.compile("([^=]*)=y")
+        val disabledPattern: Pattern = java.util.regex.Pattern.compile("([^=]*)=n")
         for (line <- Source.fromFile(file).getLines().filterNot(_.startsWith("#")).filterNot(_.isEmpty)) {
             totalFeatures += 1
             var matcher = enabledPattern.matcher(line)
             if (matcher.matches()) {
-                val name = "CONFIG_" + matcher.group(1)
+                val name = matcher.group(1)
                 val feature = FeatureExprFactory.createDefinedExternal(name)
                 var fileExTmp = fileEx.and(feature)
                 if (correctFeatureModelIncompatibility) {
@@ -1139,7 +1154,7 @@ object ProductGeneration extends EnforceTreeHelper {
             } else {
                 matcher = disabledPattern.matcher(line)
                 if (matcher.matches()) {
-                    val name = "CONFIG_" + matcher.group(1)
+                    val name = matcher.group(1)
                     val feature = FeatureExprFactory.createDefinedExternal(name)
                     var fileExTmp = fileEx.andNot(feature)
                     if (correctFeatureModelIncompatibility) {
@@ -1164,7 +1179,7 @@ object ProductGeneration extends EnforceTreeHelper {
             }
             //println(line)
         }
-        println("features mentioned in c-file but not in config: ")
+        println("features mentioned in c-file but not in config2: ")
         for (x <- features.filterNot((trueFeatures ++ falseFeatures).contains)) {
             println(x.feature)
         }
@@ -1249,61 +1264,113 @@ object ProductGeneration extends EnforceTreeHelper {
             "Unsat Configs:" + unsat_configs.mkString("{", ",", "}"))
     }
 
-    def loadConfigurationsFromCSVFile(csvFile: File, features: List[SingleFeatureExpr], fm: FeatureModel): (List[SimpleConfiguration], String) = {
-        var retList: List[SimpleConfiguration] = List()
-        val lines = Source.fromFile(csvFile).getLines().filterNot(_.startsWith("#")).filterNot(_.isEmpty)
-        val headline = lines.next()
-        val featureNames: Array[String] = headline.split(";")
-        val interestingFeaturesMap: scala.collection.mutable.HashMap[Int, SingleFeatureExpr] = new scala.collection.mutable.HashMap()
-        /*
-                println("myList:")
-                println(features.slice(0,10).map(_.feature).mkString(";"))
+  def loadConfigurationsFromCSVFile(csvFile: File, features: List[SingleFeatureExpr], fm: FeatureModel): (List[SimpleConfiguration], String) = {
+    var retList: List[SimpleConfiguration] = List()
+    val lines = Source.fromFile(csvFile).getLines().filterNot(_.startsWith("#")).filterNot(_.isEmpty)
+    val headline = lines.next()
+    val featureNames: Array[String] = headline.split(";")
+    val interestingFeaturesMap: scala.collection.mutable.HashMap[Int, SingleFeatureExpr] = new scala.collection.mutable.HashMap()
+    /*
+            println("myList:")
+            println(features.slice(0,10).map(_.feature).mkString(";"))
 
-                println("csv:")
-                println(featureNames.slice(0,10).mkString(";"))
-        */
+            println("csv:")
+            println(featureNames.slice(0,10).mkString(";"))
+    */
 
-        for (i <- 0.to(featureNames.length - 1)) {
-            val searchResult = features.find(_.feature.equals("CONFIG_" + featureNames(i).substring(featureNames(i).indexOf(":") + 1)))
-            if (searchResult.isDefined) {
-                interestingFeaturesMap.update(i, searchResult.get)
-            }
-        }
-        println("interestingFsize: " + interestingFeaturesMap.size)
-        println("first feature: " + featureNames(0))
-        println("last feature: " + featureNames(featureNames.length - 1))
-        var line = 0
-        while (lines.hasNext) {
-            line += 1
-            val currentLineElements: Array[String] = lines.next().split(";")
-            var trueFeatures: List[SingleFeatureExpr] = List()
-            var falseFeatures: List[SingleFeatureExpr] = List()
-            for (i <- 0.to(currentLineElements.length - 1)) {
-                if (currentLineElements(i).toUpperCase.equals("X")) {
-                    //println("on: " + featureNames(i))
-                    if (featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("X86_32") || featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("64BIT"))
-                        println("active: " + featureNames(i))
-                    if (interestingFeaturesMap.contains(i))
-                        trueFeatures ::= interestingFeaturesMap(i)
-                } else if (currentLineElements(i).equals("-")) {
-                    //println("off: " + featureNames(i))
-                    if (featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("X86_32") || featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("64BIT"))
-                        println("deactivated: " + featureNames(i))
-                    if (interestingFeaturesMap.contains(i))
-                        falseFeatures ::= interestingFeaturesMap(i)
-                } else
-                    println("csv file contains an element that is not \"X\" and not \"-\"! " + csvFile + " element: " + currentLineElements(i))
-            }
-            println("true Features : " + trueFeatures.size)
-            println("false Features : " + falseFeatures.size)
-            println("all: " + features.size)
-            if (!FeatureExprFactory.True.getSatisfiableAssignment(fm, features.toSet, 1 == 1).isDefined) {
-                println("no satisfiable solution for product in line " + line)
-            }
-            retList ::= new SimpleConfiguration(trueFeatures, falseFeatures)
-        }
-        (retList, "")
+    for (i <- 0.to(featureNames.length - 1)) {
+      val searchResult = features.find(_.feature.equals(featureNames(i).substring(featureNames(i).indexOf(":") + 1)))
+      if (searchResult.isDefined) {
+        interestingFeaturesMap.update(i, searchResult.get)
+      }
     }
+    println("interestingFsize: " + interestingFeaturesMap.size)
+    println("first feature: " + featureNames(0))
+    println("last feature: " + featureNames(featureNames.length - 1))
+    var line = 0
+    while (lines.hasNext) {
+      line += 1
+      val currentLineElements: Array[String] = lines.next().split(";")
+      var trueFeatures: List[SingleFeatureExpr] = List()
+      var falseFeatures: List[SingleFeatureExpr] = List()
+      for (i <- 0.to(currentLineElements.length - 1)) {
+        if (currentLineElements(i).toUpperCase.equals("X")) {
+          //println("on: " + featureNames(i))
+          if (featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("X86_32") || featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("64BIT"))
+            println("active: " + featureNames(i))
+          if (interestingFeaturesMap.contains(i))
+            trueFeatures ::= interestingFeaturesMap(i)
+        } else if (currentLineElements(i).equals("-")) {
+          //println("off: " + featureNames(i))
+          if (featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("X86_32") || featureNames(i).substring(featureNames(i).indexOf(":") + 1).equals("64BIT"))
+            println("deactivated: " + featureNames(i))
+          if (interestingFeaturesMap.contains(i))
+            falseFeatures ::= interestingFeaturesMap(i)
+        } else
+          println("csv file contains an element that is not \"X\" and not \"-\"! " + csvFile + " element: " + currentLineElements(i))
+      }
+      println("true Features : " + trueFeatures.size)
+      println("false Features : " + falseFeatures.size)
+      println("all: " + features.size)
+      if (!FeatureExprFactory.True.getSatisfiableAssignment(fm, features.toSet, 1 == 1).isDefined) {
+        println("no satisfiable solution for product in line " + line)
+      }
+      retList ::= new SimpleConfiguration(trueFeatures, falseFeatures)
+    }
+    (retList, "")
+  }
+
+  def loadConfigurationsFromCSVFile2(csvFile: File, features: List[SingleFeatureExpr],
+                                    fm: FeatureModel, kconfigonly: Boolean = true): List[SimpleConfiguration] = {
+    var retlist: List[SimpleConfiguration] = List()
+
+    // filter lines with comments out
+    val lines = Source.fromFile(csvFile).getLines().filterNot(_.startsWith("#")).filterNot(_.isEmpty)
+
+    // map with feature names we care fore
+    val interestingfeaturesmap: scala.collection.mutable.HashMap[Int, SingleFeatureExpr] = new scala.collection.mutable.HashMap()
+
+    while (lines.hasNext) {
+      // check whether line contains mapping between int->feature name
+      // if so then add the mapping to the map interestingfeaturesmap
+      // create map with features we care for together with the corresponding
+      // integer that is used internally by the sat solver
+      // for systems that use kconfig we filter for "CONFIG_"
+      // for all other systems we use all features
+      val curline = lines.next()
+      if (curline.contains("->")) {
+        val res = curline.split("->")
+        val featureid = res(0).toInt
+        val featurename = if (kconfigonly) "CONFIG_" + res(1) else res(1)
+
+        features.find(_.feature.equals(featurename)) match {
+          case Some(x) => interestingfeaturesmap.update(featureid, x)
+          case None    => ;
+        }
+      } else {
+        // the line specifies one product
+        // format is
+        // 1;-2;3 ...
+        // numbers denote feature identifiers
+        // >0 feature selected
+        // <0 feature not selected
+        var truefeatures: List[SingleFeatureExpr] = List()
+        var falsefeatures: List[SingleFeatureExpr] = List()
+
+        val productconf: Array[String] = curline.split(";")
+
+        for (featureid <- productconf) {
+          if (featureid(0) == '-') falsefeatures ::= interestingfeaturesmap.get(featureid.substring(1).toInt).get
+          else truefeatures ::= interestingfeaturesmap.get(featureid.toInt).get
+        }
+
+        retlist ::= new SimpleConfiguration(truefeatures, falsefeatures)
+      }
+
+    }
+
+    retlist
+  }
 
     /**
      * Does the same as the other config-from-file method. However, it does not create additional bdd-Feature
@@ -1325,12 +1392,12 @@ object ProductGeneration extends EnforceTreeHelper {
             totalFeatures += 1
             var matcher = enabledPattern.matcher(line)
             if (matcher.matches()) {
-                val name = "CONFIG_" + matcher.group(1)
+                val name = matcher.group(1)
                 trueFeatures += name
             } else {
                 matcher = disabledPattern.matcher(line)
                 if (matcher.matches()) {
-                    val name = "CONFIG_" + matcher.group(1)
+                    val name = matcher.group(1)
                     falseFeatures += name
                 } else {
                     ignoredFeatures += 1
