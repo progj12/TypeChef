@@ -4,9 +4,9 @@ import de.fosd.typechef.parser.c._
 import de.fosd.typechef.parser.c.FunctionCall
 import de.fosd.typechef.parser.c.FunctionDef
 import de.fosd.typechef.parser.c.PostfixExpr
-import soot.jimple.interproc.ifds.InterproceduralCFG
 import scala.collection.JavaConversions._
 import scala.collection.immutable.TreeSet
+import heros.InterproceduralCFG
 
 class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
 
@@ -217,11 +217,17 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
   def isBranchTarget(stmt: AST, suc: AST) = succ(stmt, fm, env).exists(x => x == suc)
 
-  def getCallTarget(stmt: AST): FunctionDef = {
-    if(stmt.isInstanceOf[FunctionCall]) return null
+  def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
 
-    // get called Function
+    if(!stmt.isInstanceOf[FunctionCall]){
+      null // proceed only with FunctionCalls
+    }
 
+      // get called Function
+      var tu = findPriorASTElem[stmt.type ](tUnit, env)
+      var called = filterASTElems[FunctionDef](tu)
 
-  }
+      Some(called)
+
+    }
 }
