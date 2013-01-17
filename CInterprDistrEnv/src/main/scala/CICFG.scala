@@ -158,7 +158,7 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
     callStartNodes++ filterAllASTElems[FunctionDef](tUnit)   // Start
     nonCallStartNodes++ filterAllASTElems[AST](tUnit) // getAllNodes
 
-    // todo correct? efficient way?
+    // question efficient way?
 
     nonCallStartNodes.--(callStartNodes) // remove CallStartNodes
 
@@ -217,6 +217,9 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
   def isBranchTarget(stmt: AST, suc: AST) = succ(stmt, fm, env).exists(x => x == suc)
 
+
+
+  // TODO
   def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
 
     if(!stmt.isInstanceOf[FunctionCall]){
