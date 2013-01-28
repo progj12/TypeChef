@@ -27,8 +27,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
             writeDebugInterface = false,
             recordTiming = false,
             parserStatistics = false,
-            parserResults = false,
-            ifdsIDE = false,
+            parserResults = true,
             writePI = false;
     protected File errorXMLFile = null;
     private final File _autoErrorXMLFile = new File(".");
@@ -42,7 +41,6 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
     private final static char F_DEBUGINTERFACE = Options.genOptionId();
     private final static char F_CONDITIONALCONTROLFLOW = Options.genOptionId();
     private final static char F_DATAFLOW = Options.genOptionId();
-    private final static char F_IFDS_IDE = Options.genOptionId();
     private final static char F_SERIALIZEAST = Options.genOptionId();
     private final static char F_RECORDTIMING = Options.genOptionId();
     private final static char F_FILEPC = Options.genOptionId();
@@ -61,20 +59,17 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
                 new Option("lex", LongOpt.NO_ARGUMENT, 'E', null,
                         "Stop after lexing; no parsing."),
                 new Option("parse", LongOpt.NO_ARGUMENT, F_PARSE, null,
-                        "Lex and parse the file; no type checking."),
+                        "Lex and parse the file; no type checking (default)."),
                 new Option("typecheck", LongOpt.NO_ARGUMENT, 't', null,
                         "Lex, parse, and type check; but do not create interfaces."),
                 new Option("interface", LongOpt.NO_ARGUMENT, F_INTERFACE, null,
-                        "Lex, parse, type check, and create interfaces (default)."),
+                        "Lex, parse, type check, and create interfaces."),
 
                 new Option("conditionalControlFlow", LongOpt.NO_ARGUMENT, F_CONDITIONALCONTROLFLOW, null,
                         "Lex, parse, and check conditional control flow"),
 
                 new Option("dataFlow", LongOpt.NO_ARGUMENT, F_DATAFLOW, null,
                         "Lex, parse, and check data flow"),
-
-                new Option("ide", LongOpt.NO_ARGUMENT, F_IFDS_IDE, null,
-                        "Lex, parse, and run IDE analysis framework"),
 
                 new Option("output", LongOpt.REQUIRED_ARGUMENT, 'o', "file",
                         "Path to output files (no extension, creates .pi, .macrodbg etc files)."),
@@ -126,9 +121,6 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
             parse = conditionalControlFlow = true;
         } else if (c == F_DATAFLOW) {
             parse = dataFlow = true;
-        } else if (c == F_IFDS_IDE) {
-            parse = typecheck = false;
-            parse = ifdsIDE = true;
         } else if (c == F_SERIALIZEAST) {
             serializeAST = true;
         } else if (c == F_RECORDTIMING) {
