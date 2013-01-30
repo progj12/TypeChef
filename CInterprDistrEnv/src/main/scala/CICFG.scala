@@ -220,7 +220,7 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
 
   // TODO
-  def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
+  def getCallTarget(stmt: AST): Option[FunctionDef] =   {
 
     if(!stmt.isInstanceOf[FunctionCall]){
       null // proceed only with FunctionCalls
@@ -228,9 +228,18 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
       // get called Function
       var tu = findPriorASTElem[stmt.type ](tUnit, env)
-      var called = filterASTElems[FunctionDef](tu)
+      var functiondefs= filterASTElems[FunctionDef](tu)
 
-      Some(called)
+      val callName = stmt.asInstanceOf[PostfixExpr].p
+
+      for (fd <- functiondefs ){
+        val defName = fd.asInstanceOf[FunctionDef].declarator.getId
+
+        if(callName.equals(defName))
+          Some(fd)
+      }
+
+    null
 
     }
 }
