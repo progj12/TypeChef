@@ -4,11 +4,12 @@ import de.fosd.typechef.parser.c._
 import de.fosd.typechef.parser.c.FunctionCall
 import de.fosd.typechef.parser.c.FunctionDef
 import de.fosd.typechef.parser.c.PostfixExpr
+import de.fosd.typechef.typesystem.CDeclUse
 import scala.collection.JavaConversions._
 import scala.collection.immutable.TreeSet
 import heros.InterproceduralCFG
 
-class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
+class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation with CDeclUse {
 
 
 
@@ -222,15 +223,22 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
   // TODO
   def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
 
-    if(!stmt.isInstanceOf[FunctionCall]){
-      null // proceed only with FunctionCalls
+    if(!stmt.isInstanceOf[FunctionCall]) return null
+
+    val getDefIds = getUseDeclMap.get(stmt.asInstanceOf[PostfixExpr].p)
+
+    var fDefs = List.empty[FunctionDef]
+
+    for(id <- getDefIds){
+      // get AST Elem to id
+      // iterieren ueber alle FunctionDef?
+      // oder gibt es eine andere Methode?
     }
 
-      // get called Function
-      var tu = findPriorASTElem[stmt.type ](tUnit, env)
-      var called = filterASTElems[FunctionDef](tu)
-
-      Some(called)
-
+    if (!fDefs.isEmpty) {
+      return Option(fDefs)
+    } else {
+      return null
     }
+  }
 }
