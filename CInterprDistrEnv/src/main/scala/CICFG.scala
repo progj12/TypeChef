@@ -5,11 +5,12 @@ import de.fosd.typechef.parser.c._
 import de.fosd.typechef.parser.c.FunctionCall
 import de.fosd.typechef.parser.c.FunctionDef
 import de.fosd.typechef.parser.c.PostfixExpr
+import de.fosd.typechef.typesystem.CDeclUse
 import scala.collection.JavaConversions._
 import scala.collection.immutable.TreeSet
 import heros.InterproceduralCFG
 
-class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation {
+class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation with CDeclUse {
 
 
 
@@ -36,7 +37,6 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
    * Returns all callees of a call
    * @param p1  current node
    * @return    Set of FunctionDef called by n1
-   *
    *
    *
    */
@@ -286,8 +286,9 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
   def isBranchTarget(stmt: AST, suc: AST) = succ(stmt, fm, env).exists(x => x == suc)
 
 
-  def getCallTarget(stmt: AST): Option[FunctionDef] =   {
 
+  // TODO
+  def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
 
     // /*
     System.out.println("Get Call Target of: " + printId(stmt))
@@ -297,21 +298,24 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
     if(!stmt.isInstanceOf[FunctionCall]){
       null // proceed only with FunctionCalls
     }
+    if(!stmt.isInstanceOf[FunctionCall]) return null
 
-      // get called Function
-      val tu = findPriorASTElem[stmt.type ](tUnit, env)
-      val functiondefs = filterASTElems[FunctionDef](tu)
+    val getDefIds = getUseDeclMap.get(stmt.asInstanceOf[PostfixExpr].p)
 
-      val callName = stmt.asInstanceOf[PostfixExpr].p
+    var fDefs = List.empty[FunctionDef]
 
-      for (fd <- functiondefs ){
-        val defName = fd.declarator.getId
-
-        if(callName.equals(defName))
-          return Some(fd)
-      }
-      null
+    for(id <- getDefIds){
+      // get AST Elem to id
+      // iterieren ueber alle FunctionDef?
+      // oder gibt es eine andere Methode?
     }
+
+    if (!fDefs.isEmpty) {
+      return Option(fDefs)
+    } else {
+      return null
+    }
+  }
 
 
 
