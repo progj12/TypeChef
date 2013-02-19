@@ -13,8 +13,6 @@ import heros.InterproceduralCFG
 class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation with CDeclUse {
 
 
-
-
   /**
    * Get the Method containing the Node
    * @param p1  current Node
@@ -49,37 +47,23 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
     if (isCallStmt(p1)) {
 
-      var c = getCalleeOfP1(p1)
+      var c = getCallTarget(p1.asInstanceOf[FunctionCall])
       // /*
       for(fd <- c){
-        System.out.println("Callee: " + printId(fd))
+        System.out.println("Callee: " + printId(fd.asInstanceOf[AST]))
       }
       // */
-      c
+
+
+      var callee = Set.empty[FunctionDef]
+      callee.++(c)
+      callee
     } else {
       // /*
       System.out.println("No Callee found")
       // */
       Set.empty[FunctionDef]
     }
-  }
-
-  /**
-   * returns all Succs of the AST-Element for {succ(p) | für alle i: succ(p)_i = FunctionDef}
-   * @param p1
-   * @return
-   */
-  def getCalleeOfP1(p1: AST) =  {
-    val succs = succ(p1, fm, env)
-    var callee = Set.empty[FunctionDef]
-    for(succ <- succs){
-      succ match{
-        case Some(x: FunctionDef) => callee.+(x)
-        case _ =>
-      }
-    }
-    callee
-
   }
 
   /**
@@ -104,7 +88,7 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
     }
     // */
 
-    callingNodes
+    setAsJavaSet(callingNodes)
   }
 
   /**
@@ -175,10 +159,12 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
     for(s <- successors){
       s match{
         case Some(x: AST) => {
-          if (x.isInstanceOf[ReturnStatement])
-            rsoc++(succ(x, fm, env)) // if s is a return node -> ALL successors of s are return sites of s and p1
-          else
-            rsoc++(getReturnSitesOfCallAt(x))
+          if (x.isInstanceOf[ReturnStatement]) {
+            rsoc ++ (succ(x, fm, env))
+          }
+          else {
+            rsoc ++ (getReturnSitesOfCallAt(x))
+          }
         }
         case _ =>
       }
@@ -287,34 +273,24 @@ class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalContro
 
 
 
-  // TODO
-  def getCallTarget(stmt: AST): Option[List[FunctionDef]] =   {
+  def getCallTarget(stmt: FunctionCall): Option[List[FunctionDef]] =   {
 
     // /*
     System.out.println("Get Call Target of: " + printId(stmt))
     // */
 
-
-    if(!stmt.isInstanceOf[FunctionCall]){
-      null // proceed only with FunctionCalls
-    }
-    if(!stmt.isInstanceOf[FunctionCall]) return null
+    // if(!stmt.isInstanceOf[FunctionCall]) return null
 
     val getDefIds = getUseDeclMap.get(stmt.asInstanceOf[PostfixExpr].p)
 
     var fDefs = List.empty[FunctionDef]
 
     for(id <- getDefIds){
-      // get AST Elem to id
-      // iterieren ueber alle FunctionDef?
-      // oder gibt es eine andere Methode?
+      fDefs.::(findPriorASTElem(id, env)[FunctionDef])
     }
 
-    if (!fDefs.isEmpty) {
-      return Option(fDefs)
-    } else {
-      return null
-    }
+    if (!fDefs.isEmpty) Option(fDefs)
+    else None
   }
 
 
