@@ -1,3 +1,5 @@
+package de.ecspride.cide
+
 import de.fosd.typechef.conditional.{Conditional, Opt}
 import de.fosd.typechef.crewrite.{ASTNavigation, ASTEnv, ConditionalControlFlow}
 import de.fosd.typechef.featureexpr.FeatureModel
@@ -10,8 +12,18 @@ import scala.collection.JavaConversions._
 import scala.collection.immutable.TreeSet
 import heros.InterproceduralCFG
 
-class CICFG(tUnit: AST, env: ASTEnv, fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation with CDeclUse {
+class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends ConditionalControlFlow with InterproceduralCFG[AST,FunctionDef] with ASTNavigation with CDeclUse {
+              /* (tUnit: AST, env: ASTEnv, fm: FeatureModel) */
+ /* var tUnit: AST = null
+  var env: ASTEnv = null
+  var fm: FeatureModel = null
 
+  CICFG(tu: AST, en: ASTEnv, fmodel: FeatureModel){
+    this.tUnit = tu
+    this.env = en
+    this.fm = fmodel
+  }
+   */
 
   /**
    * Get the Method containing the Node

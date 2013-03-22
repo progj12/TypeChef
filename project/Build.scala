@@ -147,7 +147,8 @@ object TypeChef extends Build {
         ctypechecker,
         javaparser,
         crewrite,
-        frontend
+        frontend,
+        cicfg
         )
 
     lazy val featureexpr = Project(
@@ -204,5 +205,9 @@ object TypeChef extends Build {
         file("CRewrite"),
         settings = buildSettings
     ) dependsOn(cparser % "test->test;compile->compile", ctypechecker, conditionallib)
+
+    lazy val cicfg = Project(
+    "CICFG", file("CInterprDistrEnv"), settings = buildSettings
+    ) dependsOn(cparser % "test->test;compile->compile", ctypechecker, conditionallib, crewrite)
 }
 
