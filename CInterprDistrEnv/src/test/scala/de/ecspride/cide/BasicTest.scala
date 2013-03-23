@@ -18,21 +18,30 @@ import java.io.{FileNotFoundException, InputStream}
 class BasicTest extends TestHelper with EnforceTreeHelper with ConditionalControlFlow with ConditionalNavigation {
   val folder = "testfiles/"
 
-  @Test
-  def testEmpty {
+  var transalationUnit: AST
+  var astEnvironment: ASTEnv
 
-    var a : AST = null
-    var e : ASTEnv = null
+
+  @Test def testSimpleMethod()
+    assert(checkCICFGMethods("simpleMethod.c") == true)
+
+  def checkCICFGMethods(file: String) {
+
     var f : FeatureModel = FeatureExprFactory.default.featureModelFactory.empty
 
+    checkCfg(folder+file, f)
 
-    val cicfg = new CICFG(a, e, f)
-
-
-
+    val cicfg = new CICFG(transalationUnit, astEnvironment, f)
 
 
-    assert(false)
+     var ancsn = cicfg.allNonCallStartNodes()
+
+      for(a <- ancsn){
+        System.out.println(PrettyPrinter.print(a))
+      }
+
+
+    false
   }
 
 

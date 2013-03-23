@@ -305,8 +305,10 @@ class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends Condi
     else None
   }
 
+  def printId(stmt: AST): String = PrettyPrinter.print(stmt)
 
 
+ /*
 
   def printId(stmt: AST): String = {
     def getListString(l: List[Opt[AST]], s: String): String = {
@@ -473,5 +475,7 @@ class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends Condi
       case e => assert(false, "match not exhaustive: " + e); ""
     }
   }
+
+  */
 
 }
