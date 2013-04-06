@@ -18,12 +18,11 @@ import java.io.{FileNotFoundException, InputStream}
 class BasicTest extends TestHelper with EnforceTreeHelper with ConditionalControlFlow with ConditionalNavigation {
   val folder = "testfiles/"
 
-  var transalationUnit: AST
-  var astEnvironment: ASTEnv
+  var transalationUnit: AST = null
+  var astEnvironment: ASTEnv = null
 
 
-  @Test def testSimpleMethod()
-    assert(checkCICFGMethods("simpleMethod.c") == true)
+
 
   def checkCICFGMethods(file: String) {
 
@@ -64,6 +63,11 @@ class BasicTest extends TestHelper with EnforceTreeHelper with ConditionalContro
 
     val family_function_defs = filterAllASTElems[FunctionDef](family_ast)
 
+    // ######################################### \\
+    transalationUnit = family_ast
+    astEnvironment = family_env
+    // ######################################### \\
+
     val tfams = System.currentTimeMillis()
     errorOccured |= family_function_defs.map(intraCfgFunctionDef(_, family_env)).exists(_ == true)
     val tfame = System.currentTimeMillis()
@@ -88,5 +92,8 @@ class BasicTest extends TestHelper with EnforceTreeHelper with ConditionalContro
 
     errors.size > 0
   }
+
+
+  @Test def testSimpleMethod(){assert(checkCICFGMethods("simpleMethod.c") == true)}
 
 }

@@ -4,8 +4,11 @@ import org.junit.Test
 import de.fosd.typechef.parser.c.{Id, TestHelper, PrettyPrinter, FunctionDef}
 import de.fosd.typechef.featureexpr.FeatureExprFactory
 import org.scalatest.matchers.ShouldMatchers
+import java.io.{FileWriter, File}
 
-class LivenessTest extends TestHelper with ShouldMatchers with ConditionalControlFlow with Liveness {
+class LivenessTest extends TestHelper with ShouldMatchers with ConditionalControlFlow with Liveness with CFGHelper {
+
+  private def getTmpFileName = File.createTempFile("/tmp", ".dot")
 
   private def runExample(code: String) {
     val a = parseFunctionDef(code)
@@ -21,7 +24,7 @@ class LivenessTest extends TestHelper with ShouldMatchers with ConditionalContro
     for (s <- ss)
       println(PrettyPrinter.print(s) + "  uses: " + usesVar(s, env) + "   defines: " + definesVar(s, env) +
         "  in: " + in(s) + "   out: " + out(s))
-    println("succs: " + DotGraph.map2file(getAllSucc(a, FeatureExprFactory.empty, env), env))
+    println("succs: " + new DotGraph(new FileWriter(getTmpFileName)).writeMethodGraph(getAllSucc(a, FeatureExprFactory.empty, env), env, Map()))
   }
 
   private def runDefinesExample(code: String) = {
@@ -94,7 +97,7 @@ class LivenessTest extends TestHelper with ShouldMatchers with ConditionalContro
   }
 
   @Test def test_standard_liveness_variability() {
-    val a = parseFunctionDef("""
+    runExample("""
       void foo() {
         a = 0;
         l1: b = a + 1;
