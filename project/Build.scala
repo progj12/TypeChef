@@ -154,6 +154,7 @@ object TypeChef extends Build {
         javaparser,
         crewrite,
         frontend,
+        cicfg,
         sampling
         )
 
@@ -214,6 +215,14 @@ object TypeChef extends Build {
         settings = buildSettings ++
             Seq(libraryDependencies <+= scalaVersion(kiamaDependency(_)))
     ) dependsOn(cparser % "test->test;compile->compile", ctypechecker, conditionallib)
+
+
+    lazy val cicfg = Project(
+    "CICFG",
+    file("CICFG"),
+    settings =  buildSettings ++
+      Seq(libraryDependencies <+= scalaVersion(kiamaDependency(_)))
+    ) dependsOn(cparser % "test->test;compile->compile", ctypechecker, conditionallib, crewrite)
 
     lazy val sampling = Project(
         "Sampling",

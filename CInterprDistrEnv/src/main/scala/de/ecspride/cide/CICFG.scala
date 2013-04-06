@@ -43,6 +43,8 @@ class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends Condi
       case _ => null
     }
   }
+
+
   /**
    * Returns all callees of a call
    * @param p1  current node
