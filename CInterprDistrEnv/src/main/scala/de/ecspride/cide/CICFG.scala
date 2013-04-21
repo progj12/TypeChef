@@ -294,20 +294,14 @@ class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends Inter
     System.out.println("Get Call Target of: " + PrettyPrinter.print(stmt))
     // */
 
-    // if(!stmt.isInstanceOf[FunctionCall]) return null
-
-    //val getDefIds = getUseDeclMap.get(stmt.asInstanceOf[PostfixExpr].p)
-
     var fDefs = List.empty[FunctionDef]
 
+    val target = getSuccsOf(stmt)
 
-    /*
-
-    for(id <- getDefIds){
+    // only FunctionDefs are relevant
+    for(id <- target){
       fDefs.::(findPriorASTElem(id, env)[FunctionDef])
     }
-
-    */
 
     if (!fDefs.isEmpty) Option(fDefs)
     else None
