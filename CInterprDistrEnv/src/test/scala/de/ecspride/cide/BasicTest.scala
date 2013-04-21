@@ -15,7 +15,7 @@ import java.io.{FileNotFoundException, InputStream}
  * Time: 20:27
  * To change this template use File | Settings | File Templates.
  */
-class BasicTest extends TestHelper with EnforceTreeHelper with ConditionalControlFlow with ConditionalNavigation {
+class BasicTest extends TestHelper with EnforceTreeHelper with InterCFG with ConditionalNavigation {
   val folder = "testfiles/"
 
   var transalationUnit: AST = null
