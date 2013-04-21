@@ -6,7 +6,7 @@ import de.fosd.typechef.featureexpr.FeatureExprFactory
 import org.scalatest.matchers.ShouldMatchers
 import java.io.{FileWriter, File}
 
-class LivenessTest extends TestHelper with ShouldMatchers with ConditionalControlFlow with Liveness with CFGHelper {
+class LivenessTest extends TestHelper with ShouldMatchers with IntraCFG with Liveness with CFGHelper {
 
   private def getTmpFileName = File.createTempFile("/tmp", ".dot")
 
@@ -443,7 +443,7 @@ class LivenessTest extends TestHelper with ShouldMatchers with ConditionalContro
                    """) should be(Map(FeatureExprFactory.True -> Set(Id("a"), Id("c")), fb -> Set(Id("b"))))
     runUsesExample("""a = (b < 2) ? c : d;
 
-                   """) should be (Map(FeatureExprFactory.True -> Set(Id("b")))) // TODO
+                   """) should be (Map(FeatureExprFactory.True -> Set(Id("b")))) // TODO conditional expressions.
 
     runUsesExample("&a;") should be (Map(FeatureExprFactory.True -> Set(Id("a"))))
     runUsesExample("*a;") should be (Map(FeatureExprFactory.True -> Set(Id("a"))))

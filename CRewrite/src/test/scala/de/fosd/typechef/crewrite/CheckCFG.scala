@@ -3,7 +3,7 @@ package de.fosd.typechef.crewrite
 import de.fosd.typechef.parser.c.{FunctionDef, AST}
 import de.fosd.typechef.featureexpr.{FeatureExprFactory, FeatureModel}
 
-object CheckCFG extends ConditionalControlFlow with CFGHelper {
+object CheckCFG extends IntraCFG with CFGHelper {
 
   def checkCfG(tunit: AST, fm: FeatureModel = FeatureExprFactory.default.featureModelFactory.empty) {
     val fdefs = filterAllASTElems[FunctionDef](tunit)
@@ -22,7 +22,7 @@ object CheckCFG extends ConditionalControlFlow with CFGHelper {
   }
 
   // given an ast element x and its successors lx: x should be in pred(lx)
-  def compareSuccWithPred(lsuccs: List[(AST, CCFG)], lpreds: List[(AST, CCFG)], env: ASTEnv): List[CFGError] = {
+  def compareSuccWithPred(lsuccs: List[(AST, CFG)], lpreds: List[(AST, CFG)], env: ASTEnv): List[CFGError] = {
     var errors: List[CFGError] = List()
 
     // check that number of nodes match

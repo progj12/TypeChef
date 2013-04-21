@@ -6,7 +6,7 @@ import de.fosd.typechef.parser.c._
 import de.fosd.typechef.featureexpr.{FeatureExprFactory, FeatureModel}
 
 
-class FileTests extends TestHelper with EnforceTreeHelper with ConditionalControlFlow with ConditionalNavigation with CFGHelper {
+class IntraCFGFileTests extends TestHelper with EnforceTreeHelper with IntraCFG with ConditionalNavigation with CFGHelper {
   val folder = "testfiles/"
 
   private def checkCFG(filename: String, fm: FeatureModel = FeatureExprFactory.default.featureModelFactory.empty) = {
@@ -45,10 +45,9 @@ class FileTests extends TestHelper with EnforceTreeHelper with ConditionalContro
   // clang does not support nested function definitions; here we ignore tests with nested function definitions
   // we also ignore test cases that typechef cannot parse
   // we also ignore test cases that make use of assembler (prettyprinter fails here); these test cases are not
-  // interessting anyway
+  // interesting anyway
 
-  // test fails; dead code in succ determination
-  @Ignore def test_20000105_1() {assert(checkCFG("20000105-1.c") == false)}
+  @Test def test_20000105_1() {assert(checkCFG("20000105-1.c") == false)}
   @Test def test_20000105_2() {assert(checkCFG("20000105-2.c") == false)}
   @Ignore def test_20000120_1() {assert(checkCFG("20000120-1.c") == false)}
   @Test def test_20000120_2() {assert(checkCFG("20000120-2.c") == false)}
@@ -860,7 +859,4 @@ class FileTests extends TestHelper with EnforceTreeHelper with ConditionalContro
   @Test def test_bug80() {assert(checkCFG("bug80.c") == false)}
   @Test def test_bug81() {assert(checkCFG("bug81.c") == false)}
   @Ignore def test_bug82() {assert(checkCFG("bug82.c") == false)}
-
-//  @Ignore def test_tar() {assert(checkCfg("tar.c") == false)}
-//  @Ignore def test_gzip() {assert(checkCfg("gzip.c") == false)}
 }
