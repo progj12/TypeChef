@@ -17,17 +17,18 @@ import java.util.List;
 
 
 public class FrontendOptions extends LexerOptions implements ParserOptions {
-    public boolean parse = true,
-                   typecheck = false,
-                   writeInterface = false,
-                   dumpcfg = false,
-                   dataFlow = false,
-                   serializeAST = false,
-                   writeDebugInterface = false,
-                   recordTiming = false,
-                   parserStatistics = false,
-                   parserResults = true,
-                   writePI = false;
+    boolean parse = true,
+            typecheck = false,
+            ifdeftoif = false,
+            writeInterface = false,
+            conditionalControlFlow = false,
+            dataFlow = false,
+            serializeAST = false,
+            writeDebugInterface = false,
+            recordTiming = true,
+            parserStatistics = false,
+            parserResults = true,
+            writePI = false;
     protected File errorXMLFile = null;
     private final File _autoErrorXMLFile = new File(".");
     String outputStem = "";
@@ -38,7 +39,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
     private final static char F_INTERFACE = Options.genOptionId();
     private final static char F_WRITEPI = Options.genOptionId();
     private final static char F_DEBUGINTERFACE = Options.genOptionId();
-    private final static char F_DUMPCFG = Options.genOptionId();
+    private final static char F_CONDITIONALCONTROLFLOW = Options.genOptionId();
     private final static char F_DATAFLOW = Options.genOptionId();
     private final static char F_SERIALIZEAST = Options.genOptionId();
     private final static char F_RECORDTIMING = Options.genOptionId();
@@ -47,6 +48,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
     private final static char F_HIDEPARSERRESULTS = Options.genOptionId();
     private final static char F_BDD = Options.genOptionId();
     private final static char F_ERRORXML = Options.genOptionId();
+    private final static char F_IFDEFTOIF = Options.genOptionId();
     private Function3<FeatureExpr, String, Position, Object> _renderParserError;
 
 
@@ -64,8 +66,11 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
                 new Option("interface", LongOpt.NO_ARGUMENT, F_INTERFACE, null,
                         "Lex, parse, type check, and create interfaces."),
 
-                new Option("dumpcfg", LongOpt.NO_ARGUMENT, F_DUMPCFG, null,
-                        "Lex, parse, and dump control flow graph"),
+                new Option("ifdeftoif", LongOpt.NO_ARGUMENT, F_IFDEFTOIF, null,
+                        "Make #ifdef to if transformation."),
+
+                new Option("conditionalControlFlow", LongOpt.NO_ARGUMENT, F_CONDITIONALCONTROLFLOW, null,
+                        "Lex, parse, and check conditional control flow"),
 
                 new Option("dataFlow", LongOpt.NO_ARGUMENT, F_DATAFLOW, null,
                         "Lex, parse, and check data flow"),
@@ -116,8 +121,10 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
             writeInterface = false;
         } else if (c == F_INTERFACE) {//--interface
             parse = typecheck = writeInterface = true;
-        } else if (c == F_DUMPCFG) {
-            parse = dumpcfg = true;
+        } else if (c == F_IFDEFTOIF) {
+            parse = typecheck = ifdeftoif = true;
+        } else if (c == F_CONDITIONALCONTROLFLOW) {
+            parse = conditionalControlFlow = true;
         } else if (c == F_DATAFLOW) {
             parse = dataFlow = true;
         } else if (c == F_SERIALIZEAST) {
@@ -166,7 +173,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
             lexOutputFile = outputStem + ".pi";
     }
 
-    public String getFile() {
+    String getFile() {
         return getFiles().iterator().next();
     }
 
@@ -187,7 +194,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
 
     private FeatureExpr filePC = null;
 
-    public FeatureExpr getFilePresenceCondition() {
+    FeatureExpr getFilePresenceCondition() {
         if (filePC == null) {
             File pcFile = new File(getFilePresenceConditionFilename());
             if (pcFile.exists())
@@ -204,7 +211,7 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
 
     private FeatureExpr localFM = null;
 
-    public FeatureExpr getLocalFeatureModel() {
+    FeatureExpr getLocalFeatureModel() {
         if (localFM == null) {
             File file = new File(getLocalFeatureModelFilename());
             if (file.exists())
@@ -242,5 +249,4 @@ public class FrontendOptions extends LexerOptions implements ParserOptions {
         else
             return errorXMLFile;
     }
-
 }

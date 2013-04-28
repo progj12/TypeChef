@@ -1,14 +1,18 @@
 package de.fosd.typechef.crefactor;
 
-import de.fosd.typechef.crefactor.backend.Cache;
 import de.fosd.typechef.crefactor.frontend.Editor;
 import de.fosd.typechef.crefactor.frontend.loader.Loader;
 import de.fosd.typechef.crefactor.util.Configuration;
 import de.fosd.typechef.parser.c.AST;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.LinkedList;
+
 
 /**
  * Launch up class for starting up CRefactor in combination with typechef.
@@ -16,6 +20,9 @@ import java.util.LinkedList;
  * @author Andreas Janker
  */
 public final class Launch {
+
+
+    private static Logger logger = LogManager.getLogger(Launch.class);
 
     /**
      * Do not allow an instance of this class.
@@ -52,9 +59,10 @@ public final class Launch {
                         loadingWindow.getFileToAnalyse(), loadingWindow.getIncludeDir(),
                         loadingWindow.getIncludeHeader(), loadingWindow.getFeatureModel());
 
-                final long parseStart = System.currentTimeMillis();
+                final ThreadMXBean tb = ManagementFactory.getThreadMXBean();
+                final long parseStart = tb.getCurrentThreadCpuTime();
                 final AST ast = Parse.parse(typeChefConfig);
-                System.out.println("Parsing duration: " + (System.currentTimeMillis() - parseStart) + "ms");
+                logger.info("Parsing duration: " + (tb.getCurrentThreadCpuTime() - parseStart) / 1000000 + "ms");
 
                 if (ast == null) {
                     // Parsing failed.
@@ -63,10 +71,10 @@ public final class Launch {
                 }
 
                 // parse file
-                if (Cache.parse(typeChefConfig) == null) {
-                    System.err.println("Something really bad happend");
-                    System.exit(-1);
-                }
+                /**if (Cache.parse(typeChefConfig) == null) {
+                 System.err.println("Something really bad happend");
+                 System.exit(-1);
+                 }  */
 
                 // show editor window
                 final Editor editor = new Editor(new Morpheus(ast, loadingWindow.getFileToAnalyse()));

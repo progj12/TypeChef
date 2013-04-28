@@ -3,6 +3,8 @@ package de.fosd.typechef.crefactor.frontend;
 import de.fosd.typechef.crefactor.Morpheus;
 import de.fosd.typechef.crefactor.util.Configuration;
 import de.fosd.typechef.parser.c.PrettyPrinter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextArea;
@@ -13,6 +15,8 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -20,6 +24,8 @@ import java.util.Observer;
  * The main editor window.
  */
 public class Editor extends JFrame implements Observer {
+
+    private static Logger logger = LogManager.getLogger(Editor.class);
 
     /**
      * Reference to the textarea.
@@ -37,7 +43,6 @@ public class Editor extends JFrame implements Observer {
     public Editor(final Morpheus morph) {
         super(Configuration.getInstance().getConfig("editor.title"));
 
-        final JPanel contentPane = new JPanel(new BorderLayout());
         this.morpheus = morph;
         morph.addObserver(this);
 
@@ -45,12 +50,13 @@ public class Editor extends JFrame implements Observer {
         this.textArea = new RSyntaxTextArea(Configuration.getInstance().getConfigAsInt("editor.rows"),
                 Configuration.getInstance().getConfigAsInt("editor.columns"));
         this.textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
-        this.textArea.setWhitespaceVisible(true);
+        this.textArea.setWhitespaceVisible(false);
         this.textArea.setCodeFoldingEnabled(true);
         this.textArea.setAntiAliasingEnabled(true);
         this.textArea.setEditable(true);
 
         // Enable Scrolling
+        final JPanel contentPane = new JPanel(new BorderLayout());
         final RTextScrollPane scrollPane = new RTextScrollPane(this.textArea);
         scrollPane.setFoldIndicatorEnabled(true);
         contentPane.add(scrollPane, BorderLayout.CENTER);
@@ -109,8 +115,10 @@ public class Editor extends JFrame implements Observer {
 
     @Override
     public void update(final Observable observable, final Object o) {
-        final long time = System.currentTimeMillis();
+        final ThreadMXBean tb = ManagementFactory.getThreadMXBean();
+        final long startTime = tb.getCurrentThreadCpuTime();
         this.textArea.setText(PrettyPrinter.print(this.morpheus.getAST()));
-        System.out.println("PrettyPrinting duration: " + (System.currentTimeMillis() - time));
+        final long duration = (tb.getCurrentThreadCpuTime() - startTime) / 1000000;
+        logger.info("PrettyPrinting duration: " + duration + "ms");
     }
 }

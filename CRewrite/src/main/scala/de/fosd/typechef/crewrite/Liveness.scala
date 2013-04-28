@@ -117,7 +117,11 @@ trait Variables {
 
 class IdentityHashMapCache[A] {
   private val cache: java.util.IdentityHashMap[Any, A] = new util.IdentityHashMap[Any, A]()
-  def update(k: Any, v: A) { cache.put(k, v) }
+
+  def update(k: Any, v: A) {
+    cache.put(k, v)
+  }
+
   def lookup(k: Any): Option[A] = {
     val v = cache.get(k)
     if (v != null) Some(v)
@@ -125,7 +129,7 @@ class IdentityHashMapCache[A] {
   }
 }
 
-trait Liveness extends AttributionBase with Variables with IntraCFG {
+trait Liveness extends AttributionBase with Variables with ConditionalControlFlow {
 
   type UsesDeclaresRel = java.util.IdentityHashMap[Id, Option[Conditional[Option[Id]]]]
 
@@ -135,9 +139,17 @@ trait Liveness extends AttributionBase with Variables with IntraCFG {
   private var udr: UsesDeclaresRel = null
   private var fm: FeatureModel = null
 
-  def setEnv(newenv: ASTEnv) { env = newenv }
-  def setUdr(newudr: UsesDeclaresRel) { udr = newudr }
-  def setFm(newfm: FeatureModel) { fm = newfm }
+  def setEnv(newenv: ASTEnv) {
+    env = newenv
+  }
+
+  def setUdr(newudr: UsesDeclaresRel) {
+    udr = newudr
+  }
+
+  def setFm(newfm: FeatureModel) {
+    fm = newfm
+  }
 
   private def updateMap(map: Map[Id, FeatureExpr],
                         fexp: FeatureExpr,

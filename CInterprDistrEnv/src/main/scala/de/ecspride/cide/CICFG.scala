@@ -231,10 +231,11 @@ class CICFG(val tUnit: AST, val env: ASTEnv, val fm: FeatureModel) extends Inter
 
     for(succ <- succs){
         succ match{
-          case Some(x: AST) => results ::: List(x) // why not <List> :: x ?  This would decrease complexity from O(n) to O(1)!
+          case Some(x: AST) => results ::: List(x)
           case _ =>
         }
     }
+
     seqAsJavaList(results)
   }
 

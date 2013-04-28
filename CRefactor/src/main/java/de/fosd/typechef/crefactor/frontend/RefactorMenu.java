@@ -1,13 +1,9 @@
 package de.fosd.typechef.crefactor.frontend;
 
-import de.fosd.typechef.conditional.Opt;
 import de.fosd.typechef.crefactor.Morpheus;
-import de.fosd.typechef.crefactor.backend.ASTPosition;
-import de.fosd.typechef.crefactor.backend.Cache;
 import de.fosd.typechef.crefactor.backend.refactor.ExtractFunction;
 import de.fosd.typechef.crefactor.backend.refactor.InlineFunction;
 import de.fosd.typechef.crefactor.backend.refactor.RenameIdentifier;
-import de.fosd.typechef.crefactor.frontend.actions.refactor.ExtractFunctionActions;
 import de.fosd.typechef.crefactor.frontend.actions.refactor.RefactorAction;
 import de.fosd.typechef.crefactor.frontend.util.Selection;
 import de.fosd.typechef.crefactor.util.Configuration;
@@ -59,38 +55,28 @@ public class RefactorMenu implements MenuListener {
         /**
          * Refactor Renaming
          */
-        final List<Id> availableIds = RenameIdentifier.getAvailableIdentifiers(morpheus.getAST(), morpheus.getASTEnv(), selection);
+        final List<Id> availableIds = RenameIdentifier.getAvailableIdentifiers(morpheus, selection);
         if (!availableIds.isEmpty()) {
             final JMenu rename = new JMenu(Configuration.getInstance().getConfig("refactor.rename.name"));
             this.menu.add(rename);
             addRenamingsToMenu(availableIds, rename);
-        }
 
-        /**
-         * Refactor Extract Method
-         */
-        final List<Opt<?>> selectedAST = ASTPosition.getSelectedOpts(Cache.getAST(), Cache.getASTEnv(), morpheus.getFile().getAbsolutePath(),
-                selection.getLineStart(), selection.getLineEnd(), selection.getRowStart(), selection.getRowEnd());
-        List<AST> selectedElements = ASTPosition.getSelectedExprOrStatements(Cache.getAST(), Cache.getASTEnv(), morpheus.getFile().getAbsolutePath(),
-                selection.getLineStart(), selection.getLineEnd(), selection.getRowStart(), selection.getRowEnd());
-        // System.out.println("Selection:" + selectedElements.toString());
-        // final boolean extractionPossible = ExtractMethod.refactorIsPossible(selectedElements, Cache.getAST(), Cache.getASTEnv(), Cache.getDeclUseMap(), Cache.getUseDeclMap(), "newFunc");
-        final boolean eligable = ExtractFunction.isEligableForExtraction(selectedAST, Cache.getASTEnv());
-        if (this.menu.getComponentCount() != 0) {
-            this.menu.add(new JSeparator());
-        }
-        final JMenuItem extract = new JMenuItem(ExtractFunctionActions.getExtractFunctionAction(editor, selectedAST));
-        this.menu.add(extract);
-        extract.setEnabled(eligable);
 
-        /**
-         * Inline Function
-         */
-        final List<Id> availableFuncIDs = InlineFunction.getAvailableIdentifiers(morpheus.getAST(), morpheus.getASTEnv(), selection);
-        if (!availableFuncIDs.isEmpty()) {
-            final JMenu inline = new JMenu(Configuration.getInstance().getConfig("refactor.inline.name"));
-            this.menu.add(inline);
-            addInliningToMenu(availableFuncIDs, inline);
+            if (ExtractFunction.isAvailable(morpheus, selection)) {
+                final List<AST> extractSelection = ExtractFunction.getSelectedElements(morpheus, selection);
+                final JMenuItem extract = new JMenuItem(RefactorAction.getExtractFunction(morpheus, extractSelection));
+                this.menu.add(extract);
+            }
+
+            /**
+             * Inline Function
+             */
+            final List<Id> availableFuncIDs = InlineFunction.getAvailableIdentifiers(morpheus, selection);
+            if (!availableFuncIDs.isEmpty()) {
+                final JMenu inline = new JMenu(Configuration.getInstance().getConfig("refactor.inline.name"));
+                this.menu.add(inline);
+                addInliningToMenu(availableFuncIDs, inline);
+            }
         }
     }
 
@@ -120,7 +106,7 @@ public class RefactorMenu implements MenuListener {
     private void addInliningToMenu(final List<Id> selectedIDs, final JMenu menu) {
         final Iterator<Id> it = selectedIDs.iterator();
         while (it.hasNext()) {
-            menu.add(RefactorAction.getInlineFunction(this.editor.getMorpheus(), it.next()));
+            menu.add(RefactorAction.getInlineFunctionAction(this.editor.getMorpheus(), it.next()));
         }
     }
 }
