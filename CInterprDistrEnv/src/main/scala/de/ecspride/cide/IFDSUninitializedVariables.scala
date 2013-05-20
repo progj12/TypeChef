@@ -31,7 +31,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
             def computeTargets (source: Specifier): util.Set[Specifier] = {
               if (source == zeroValue()) {
                 val res: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier]()
-                res.addAll(m.getActiveBody().getSpecifiers())
+                res.addAll(m.getActiveBody().getSpecifiers())                // Method methods needed
                  for (i <- 0 to m.getParameterCount()){
                   res.remove(m.getActiveBody().getParameterSpecifier(i))
                  }
@@ -44,7 +44,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
 
         if (curr.isInstanceOf[Declaration]) {
           val definition = curr.asInstanceOf[Declaration]
-          val leftOp: AST = definition.getLeftOp()
+          val leftOp: AST = definition.getLeftOp()                        // knowledge of possible node-types necessary
           if (leftOp.isInstanceOf[Specifier]) {
             val leftOpSpecifier: Specifier = leftOp.asInstanceOf[Specifier]
             return new FlowFunction[Specifier] () {
@@ -52,7 +52,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
               @Override
               def computeTargets(source: Specifier): util.Set[Specifier]=
               {
-                var useBoxes: List[ValueBox] = definition.getUseBoxes()
+                var useBoxes: List[ValueBox] = definition.getUseBoxes()      // Use-/Valueboxes or equivalent functionality needed
                 for (valueBox <- useBoxes)
                 {
                   if (valueBox.getValue().equivTo(source)) {
@@ -79,9 +79,9 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
       @Override
       def getCallFlowFunction(callStmt: AST, destinationMethod: FunctionDef): FlowFunction[Specifier]=
       {
-        Stmt stmt = (Stmt) callStmt
-        invokeExpr: InvokeExpr = stmt.getInvokeExpr()
-        val args: List[Value]  = invokeExpr.getArgs()
+        val stmt: Stmt = (Stmt) callStmt              // Exact type of a call statement?
+        invokeExpr: InvokeExpr = stmt.getInvokeExpr()       // Invoke expression of a call statement?
+        val args: List[Value]  = invokeExpr.getArgs()   // Value?
 
         val SpecifierArguments: List[Specifier]  = new ArrayList[Specifier]()
         for (v <- args)
@@ -102,7 +102,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
 
             if (source == zeroValue()) {
               //gen all Specifiers that are not parameter Specifiers
-              var Specifiers: Chain[Specifier] = destinationMethod.getActiveBody().getSpecifiers()
+              var Specifiers: Chain[Specifier] = destinationMethod.getActiveBody().getSpecifiers()     // Chain?
               var uninitializedSpecifiers: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier](Specifiers)
               for ( i <-  0 to  destinationMethod.getParameterCount())
               {
@@ -121,7 +121,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
       def getReturnFlowFunction(callSite: AST, calleeMethod: FunctionDef,
       exitStmt: AST, returnSite: AST): FlowFunction[Specifier] =
         {
-        if (callSite.isInstanceOf[DefinitionStmt]) {
+        if (callSite.isInstanceOf[DefinitionStmt]) {                    // Definition statement in typechef?
           val definition: DefinitionStmt = callSite.asInstanceOf[DefinitionStmt]
           if (definition.getLeftOp().isInstanceOf[Specifier]) {
             val leftOpSpecifier: Specifier = definition.getLeftOp().asInstanceOf[Specifier]
@@ -137,7 +137,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
                 }
 
               }
-            } else if (exitStmt.isInstanceOf[ThrowStmt]) {
+            } else if (exitStmt.isInstanceOf[ThrowStmt]) {          // Throw Statement in typechef?
               //if we throw an exception, LHS of call is undefined
               return new FlowFunction[Specifier] () {
 
@@ -179,7 +179,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
 
   @Override
   def createZeroValue() = {
-    return new JimpleSpecifier("<<zero>>", NullType.v())
+    return new JimpleSpecifier("<<zero>>", NullType.v())         // Null ?!
   }
 
 }
