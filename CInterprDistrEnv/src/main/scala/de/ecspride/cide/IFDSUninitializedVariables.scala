@@ -79,9 +79,11 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
       @Override
       def getCallFlowFunction(callStmt: AST, destinationMethod: FunctionDef): FlowFunction[Specifier]=
       {
-        val stmt: Stmt = (Stmt) callStmt              // Exact type of a call statement?
-        invokeExpr: InvokeExpr = stmt.getInvokeExpr()       // Invoke expression of a call statement?
-        val args: List[Value]  = invokeExpr.getArgs()   // Value?
+        val stmt = callStmt.asInstanceOf[FunctionCall]              // Exact type of a call statement?
+    //    invokeExpr: InvokeExpr = stmt.getInvokeExpr()       // Invoke expression of a call statement?
+    //    val args: List[Value]  = invokeExpr.getArgs()   // Value?
+
+        val args = stmt.this.params
 
         val SpecifierArguments: List[Specifier]  = new ArrayList[Specifier]()
         for (v <- args)
