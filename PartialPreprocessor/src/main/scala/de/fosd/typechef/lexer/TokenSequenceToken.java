@@ -51,19 +51,17 @@ class TokenSequenceToken extends Token {
 
     @Override
     public void setLine(int Line) {
-        line = Line;
+        line=Line;
     }
 
     @Override
     public Source getSource() {
         return source;
     }
-
     @Override
     public String getSourceName() {
         return source.toString();
     }
-
     @Override
     public String getText() {
         StringWriter strWriter = new StringWriter();
@@ -77,7 +75,6 @@ class TokenSequenceToken extends Token {
         for (Token tok : internalTokens)
             tok.lazyPrint(writer);
     }
-
     @Override
     public Token clone() {
         List<Token> tokenList = new ArrayList<Token>();

@@ -2,6 +2,7 @@ package de.fosd.typechef.deltaxtc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 /**
@@ -23,6 +24,7 @@ public class Help {
         is.close();
         os.close();
     }
+
 
 
 }
