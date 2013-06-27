@@ -83,7 +83,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
     //    invokeExpr: InvokeExpr = stmt.getInvokeExpr()       // Invoke expression of a call statement?
     //    val args: List[Value]  = invokeExpr.getArgs()   // Value?
 
-        val args = stmt.this.params
+        val args = stmt.params
 
         val SpecifierArguments: List[Specifier]  = new ArrayList[Specifier]()
         for (v <- args)
