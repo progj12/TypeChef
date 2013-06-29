@@ -8,6 +8,7 @@ import java.util ._
 import java.util
 import heros.flowfunc.{KillAll, Kill, Identity}
 import javax.lang.model.`type`.NullType
+import com.sun.tools.javac.jvm.Code.Chain
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,13 +27,12 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
         val m = icfg.getMethodOf(curr)
         if (Scene.v().getEntryPoints().contains(m) && icfg.isStartPoint(curr)) {     // Scene?
           return new FlowFunction[Specifier] () {
-
             @Override
             def computeTargets (source: Specifier): util.Set[Specifier] = {
               if (source == zeroValue()) {
                 val res: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier]()
                 res.addAll(m.getActiveBody().getSpecifiers())                // Method methods needed
-                 for (i <- 0 to m.getParameterCount()){
+                 for (i <- 0 to m.specifiers.size){
                   res.remove(m.getActiveBody().getParameterSpecifier(i))
                  }
                  return res.asInstanceOf[util.Set[Specifier]]
@@ -42,9 +42,9 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
           }
         }
 
-        if (curr.isInstanceOf[Declaration]) {
-          val definition = curr.asInstanceOf[Declaration]
-          val leftOp: AST = definition.getLeftOp()                        // knowledge of possible node-types necessary
+        if (curr.isInstanceOf[AssignExpr]) {
+          val definition = curr.asInstanceOf[AssignExpr]
+          val leftOp: AST = definition.target                        // knowledge of possible node-types necessary
           if (leftOp.isInstanceOf[Specifier]) {
             val leftOpSpecifier: Specifier = leftOp.asInstanceOf[Specifier]
             return new FlowFunction[Specifier] () {
@@ -86,7 +86,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
         val args = stmt.params
 
         val SpecifierArguments: List[Specifier]  = new ArrayList[Specifier]()
-        for (v <- args)
+        for (v <- args.exprs)
         if (v.isInstanceOf[Specifier]) // unknown type: Value
           SpecifierArguments.add(v.asInstanceOf[Specifier])
 
@@ -95,18 +95,19 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
           @Override
           def computeTargets(source: Specifier): Set [Specifier] =
             {
-            for (SpecifierArgument <- SpecifierArguments)
+            for (sa <- SpecifierArguments)
             {
-              if (source.equivTo(SpecifierArgument)) {
-                return Collections.singleton[Specifier] (destinationMethod.getActiveBody().getParameterSpecifier(args.indexOf(SpecifierArgument)))
+              if (source.equivTo(sa)) {
+
+                return Collections.singleton[Specifier] (destinationMethod.getActiveBody().getParameterSpecifier(args.exprs.indexOf(sa)))
               }
             }
 
             if (source == zeroValue()) {
               //gen all Specifiers that are not parameter Specifiers
-              var Specifiers: Chain[Specifier] = destinationMethod.getActiveBody().getSpecifiers()     // Chain?
+              var Specifiers: Chain[Specifier] = destinationMethod.getActiveBody().getSpecifiers()
               var uninitializedSpecifiers: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier](Specifiers)
-              for ( i <-  0 to  destinationMethod.getParameterCount())
+              for ( i <-  0 to  destinationMethod.specifiers.size)
               {
                 uninitializedSpecifiers.remove(destinationMethod.getActiveBody().getParameterSpecifier(i))
               }
@@ -121,30 +122,30 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
 
       @Override
       def getReturnFlowFunction(callSite: AST, calleeMethod: FunctionDef,
-      exitStmt: AST, returnSite: AST): FlowFunction[Specifier] =
+      exitStmt: AST, returnSite: AST): FlowFunction[PrimaryExpr] =
         {
-        if (callSite.isInstanceOf[DefinitionStmt]) {                    // Definition statement in typechef?
-          val definition: DefinitionStmt = callSite.asInstanceOf[DefinitionStmt]
-          if (definition.getLeftOp().isInstanceOf[Specifier]) {
-            val leftOpSpecifier: Specifier = definition.getLeftOp().asInstanceOf[Specifier]
-            if (exitStmt.isInstanceOf[ReturnStmt]) {
-              val returnStmt: ReturnStmt = exitStmt.asInstanceOf[ReturnStmt]
-              return new FlowFunction[Specifier] () {
+        if (callSite.isInstanceOf[AssignExpr]) {
+          val stmt = callSite.asInstanceOf[AssignExpr]
+          if (stmt.target.isInstanceOf[PrimaryExpr]) {  // PrimaryExpr = typical variable/pointer?
+            val leftOpSpecifier: PrimaryExpr = stmt.target.asInstanceOf[PrimaryExpr]
+            if (exitStmt.isInstanceOf[ReturnStatement]) {
+              val returnStmt: ReturnStatement = exitStmt.asInstanceOf[ReturnStatement]
+              return new FlowFunction[PrimaryExpr] () {
 
                 @Override
-                def computeTargets(source: Specifier): Set[Specifier] =  {
-                  if (returnStmt.getOp().equivTo(source))
+                def computeTargets(source: PrimaryExpr): Set[PrimaryExpr] =  {    // PrimaryExpr or Specifier?
+                  if (returnStmt.expr.equivTo(source))
                     return Collections.singleton(leftOpSpecifier)
                   return Collections.emptySet()
                 }
 
               }
-            } else if (exitStmt.isInstanceOf[ThrowStmt]) {          // Throw Statement in typechef?
+            } else if (exitStmt.isInstanceOf[GotoStatement]) {          // Throw = Goto - similar statements possible?
               //if we throw an exception, LHS of call is undefined
-              return new FlowFunction[Specifier] () {
+              return new FlowFunction[PrimaryExpr] () {
 
                 @Override
-                def computeTargets(source: Specifier): util.Set[Specifier] =
+                def computeTargets(source: PrimaryExpr): util.Set[PrimaryExpr] =
                 {
                   if (source == zeroValue())
                     return Collections.singleton(leftOpSpecifier)
@@ -161,12 +162,12 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
       }
 
       @Override
-      def getCallToReturnFlowFunction (callSite: AST, returnSite: AST): FlowFunction[Specifier] = {
-        if (callSite.isInstanceOf[DefinitionStmt]) {
-          var definition: DefinitionStmt = callSite.asInstanceOf[DefinitionStmt]
-          if (definition.getLeftOp().isInstanceOf[Specifier]) {
-            val leftOpSpecifier: Specifier = definition.getLeftOp().asInstanceOf[Specifier]
-            return new Kill[Specifier] (leftOpSpecifier)
+      def getCallToReturnFlowFunction (callSite: AST, returnSite: AST): FlowFunction[PrimaryExpr] = {
+        if (callSite.isInstanceOf[AssignExpr]) {
+          var definition = callSite.asInstanceOf[AssignExpr]
+          if (definition.source.isInstanceOf[PrimaryExpr]) {
+            val leftOpSpecifier: PrimaryExpr = definition.source.asInstanceOf[PrimaryExpr]
+            return new Kill[PrimaryExpr] (leftOpSpecifier)
           }
         }
         return Identity.v()
