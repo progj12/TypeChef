@@ -7,8 +7,6 @@ import heros.template.DefaultIFDSTabulationProblem
 import java.util ._
 import java.util
 import heros.flowfunc.{KillAll, Kill, Identity}
-import javax.lang.model.`type`.NullType
-import com.sun.tools.javac.jvm.Code.Chain
 
 /**
  * Created with IntelliJ IDEA.
@@ -83,9 +81,7 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
       @Override
       def getCallFlowFunction(callStmt: AST, destinationMethod: FunctionDef): FlowFunction[Specifier]=
       {
-        val stmt = callStmt.asInstanceOf[FunctionCall]              // Exact type of a call statement?
-    //    invokeExpr: InvokeExpr = stmt.getInvokeExpr()       // Invoke expression of a call statement?
-    //    val args: List[Value]  = invokeExpr.getArgs()   // Value?
+        val stmt = callStmt.asInstanceOf[FunctionCall]
 
         val args = stmt.params
 
@@ -110,7 +106,8 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
             if (source == zeroValue()) {
               //gen all Specifiers that are not parameter Specifiers
               var Specifiers: Chain[Specifier] = destinationMethod.getActiveBody().getSpecifiers()
-              var uninitializedSpecifiers: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier](Specifiers)
+              var uninitializedSpecifiers: LinkedHashSet[Specifier] = new LinkedHashSet[Specifier]()
+              uninitializedSpecifiers.addAll(Specifiers)
               for ( i <-  0 to  destinationMethod.specifiers.size)
               {
                 uninitializedSpecifiers.remove(destinationMethod.getActiveBody().getParameterSpecifier(i))
@@ -188,7 +185,5 @@ class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProbl
   def createZeroValue() = {
     return new JimpleSpecifier("<<zero>>", NullType.v())         // Null ?!
   }
-
-}
 
 }

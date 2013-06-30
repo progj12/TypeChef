@@ -165,8 +165,8 @@ object TypeChef extends Build {
     )
 
   lazy val cicfg = Project(
-    "CICFG",
-    file("CICFG"),
+    "CInterprDistrEnv",
+    file("CInterprDistrEnv"),
     settings =  buildSettings ++
       Seq(libraryDependencies <+= scalaVersion(kiamaDependency(_)))
   ) dependsOn(cparser % "test->test;compile->compile", ctypechecker, conditionallib, crewrite)
