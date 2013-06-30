@@ -16,6 +16,10 @@ import com.sun.tools.javac.jvm.Code.Chain
  * Date: 13.05.13
  * Time: 21:52
  * To change this template use File | Settings | File Templates.
+ *
+ *
+ * Implementing a Uninitialized Variables Analysis and is
+ * based on the example-implementation using Soot for Java program analysis
  */
 class IFDSUninitializedVariables(icfg: CICFG) extends DefaultIFDSTabulationProblem {
 
